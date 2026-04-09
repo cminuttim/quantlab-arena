@@ -196,11 +196,11 @@ results/
 
 ## Sample Results
 
-### ^MXX — Metric Comparison (2022 test year, horizon = 10 days)
+### ^MXX — Metric Comparison (cutoff 2019-01-01, horizon = 20 days)
 
 ![Metric Comparison](docs/images/comparison_metrics_MXX.png)
 
-### Forecast Sample — Origin 2022-07
+### Forecast Sample — test period 2019–2022
 
 ![Predictions Sample](docs/images/predictions_sample_MXX.png)
 
@@ -224,7 +224,7 @@ MASE and Theil's U are centered at 1.0 — green cells beat the random walk, red
 
 ## Benchmark Results
 
-Results for 5 indices, cutoff 2021-01-01, test 252 days, horizon 10, samples 12, lags 60.
+Results for 5 indices, cutoff 2019-01-01, test 756 days (~3 years), horizon 20, samples 12, lags 10.
 Scale-free metrics only (MAPE % and MASE).
 
 | Ticker | Index | Best model (MASE) | MASE | MAPE |
