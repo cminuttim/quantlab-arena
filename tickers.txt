@@ -1,0 +1,70 @@
+================================================================================
+GLOBAL MARKET INDEX TICKERS - REFERENCE LIST (2026)
+================================================================================
+
+REGION          | INDEX NAME                | TICKER (Yahoo/Bloomberg)
+----------------|---------------------------|-------------------------
+NORTH AMERICA   | S&P 500                   | ^GSPC / SPX
+NORTH AMERICA   | Dow Jones Industrial Avg  | ^DJI / INDU
+NORTH AMERICA   | Nasdaq Composite          | ^IXIC / CCMP
+NORTH AMERICA   | S&P/TSX Composite (CAN)   | ^GSPTSE / TSX
+NORTH AMERICA   | IPC (MEX)                 | ^MXX / MEXBOL
+----------------|---------------------------|-------------------------
+EUROPE          | FTSE 100 (UK)             | ^FTSE
+EUROPE          | DAX 40 (GER)              | ^GDAXI
+EUROPE          | CAC 40 (FRA)              | ^FCHI
+EUROPE          | Euro Stoxx 50             | ^STOXX50E
+EUROPE          | IBEX 35 (ESP)             | ^IBEX
+----------------|---------------------------|-------------------------
+ASIA & PACIFIC  | Nikkei 225 (JPN)          | ^N225
+ASIA & PACIFIC  | Hang Seng (HKG)           | ^HSI
+ASIA & PACIFIC  | Shanghai Composite (CHN)   | 000001.SS
+ASIA & PACIFIC  | S&P/ASX 200 (AUS)         | ^AXJO
+ASIA & PACIFIC  | BSE SENSEX (IND)          | ^BSESN
+ASIA & PACIFIC  | KOSPI (KOR)               | ^KS11
+----------------|---------------------------|-------------------------
+INDICATORS      | MSCI World Index          | URTH (ETF)
+INDICATORS      | Volatility Index (VIX)    | ^VIX
+INDICATORS      | U.S. Dollar Index         | DXY / DX-Y.NYB
+----------------|---------------------------|-------------------------
+
+Note: Ticker prefixes (like ^) are standard for Yahoo Finance. 
+For TradingView or Bloomberg, the prefix may be omitted or replaced 
+by a country exchange code (e.g., "SPX" or "DAX:GER").
+================================================================================
+
+
+
+
+================================================================================
+EMERGING & DEVELOPING MARKET INDEX TICKERS (2026)
+================================================================================
+
+REGION          | COUNTRY        | INDEX NAME                | TICKER (Yahoo)
+----------------|----------------|---------------------------|------------------
+LATIN AMERICA   | Brazil         | Bovespa (IBOV)            | ^BVSP
+LATIN AMERICA   | Mexico         | IPC Mexico                | ^MXX
+LATIN AMERICA   | Chile          | IPSA                      | ^IPSA
+----------------|----------------|---------------------------|------------------
+ASIA            | China          | SSE Composite             | 000001.SS
+ASIA            | China          | CSI 300                   | 000300.SS
+ASIA            | India          | BSE SENSEX                | ^BSESN
+ASIA            | India          | NIFTY 50                  | ^NSEI
+ASIA            | Indonesia      | IDX Composite             | ^JKSE
+ASIA            | Vietnam        | VN-Index                  | ^VNI
+----------------|----------------|---------------------------|------------------
+EMEA            | South Africa   | FTSE/JSE Top 40           | ^J200.JO
+EMEA            | Turkey         | BIST 100                  | XU100.IS
+EMEA            | Saudi Arabia   | Tadawul All Share         | ^TASI.SR
+----------------|----------------|---------------------------|------------------
+
+AGGREGATE TOOLS | DESCRIPTION                                | TICKER (ETF)
+----------------|--------------------------------------------|------------------
+MSCI EM         | Broad Emerging Markets Performance         | EEM
+Vanguard EM     | FTSE Emerging Markets ETF                  | VWO
+----------------|--------------------------------------------|------------------
+
+Note: For many developing markets, the "ETF" ticker (like EEM or VWO) 
+is often more liquid and easier to track for retail investors than 
+the local spot indexes themselves.
+================================================================================

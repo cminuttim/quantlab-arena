@@ -1,0 +1,112 @@
+QuantLab Arena — Financial Time Series Forecasting Benchmark
+=============================================================
+
+python main.py [opciones]
+
+OPCIONES
+--------
+
+  --ticker          Símbolo de Yahoo Finance. Default: ^MXX
+                    Ej: ^GSPC (S&P 500), SPY, AAPL, BTC-USD, EURUSD=X
+
+  --start-date      Fecha de inicio de los datos históricos (YYYY-MM-DD).
+                    Default: el dato más antiguo disponible para el ticker.
+
+  --cutoff-date     Fecha de corte train/test (YYYY-MM-DD). Todo antes de
+                    esta fecha se usa para entrenamiento. Default: 2022-01-01
+
+  --test-days       Número de días bursátiles en el período de test tras
+                    cutoff-date. Default: 252 (~1 año).
+                    Ej: 60 (~3 meses), 126 (~6 meses), 504 (~2 años)
+
+  --n-samples       Número de puntos de evaluación dentro del período de test.
+                    Default: 12
+
+  --horizon         Horizonte de predicción en días bursátiles (10 ≈ 2 semanas).
+                    Default: 10
+
+  --lags            Ventana de lags para modelos ML/DL. Default: 20
+
+  --models          Subconjunto de modelos a correr (separados por espacio).
+                    Opciones: arima  linreg  lgbm  mlp  cnn  gru  prophet  chronos
+                    Default: todos
+
+  --skip-chronos    Flag. Omite el modelo Chronos (útil sin internet o para
+                    pruebas rápidas).
+
+  --cache-dir       Directorio para cachear los datos descargados.
+                    Default: cache/
+
+  --output-dir      Directorio base de salida para CSVs y gráficas.
+                    Default: results/
+
+MODELOS DISPONIBLES
+-------------------
+
+  arima     ARIMA con selección automática de orden (pmdarima)
+  linreg    Regresión lineal con features de lags + calendario (sklearn)
+  lgbm      Gradient Boosting (LightGBM) con features de lags + calendario
+  mlp       Red neuronal MLP (sklearn) con features de lags + calendario
+  cnn       Red convolucional 1D (PyTorch), predicción recursiva
+  gru       Red recurrente GRU (PyTorch), predicción recursiva
+  prophet   Modelo de tendencia + estacionalidad (Facebook Prophet)
+  chronos   Modelo preentrenado zero-shot (Amazon Chronos T5-small)
+            — descarga ~600 MB la primera vez; omitir con --skip-chronos
+
+MÉTRICAS REPORTADAS
+-------------------
+
+  Dependientes de escala (NO comparables entre tickers distintos):
+    MAE       Error absoluto medio
+    RMSE      Raíz del error cuadrático medio
+
+  Independientes de escala (comparables entre cualquier ticker):
+    MAPE      Error porcentual absoluto medio (%)
+    SMAPE     MAPE simétrico (%)
+    MASE      MAE_modelo / MAE_naive  →  < 1 = supera al random walk
+    TheilU    RMSE_modelo / RMSE_naive →  < 1 = supera al random walk
+    DirAcc    % de pasos con dirección correcta (50% = azar)
+
+  El "naive" o random walk es predecir el último precio observado para
+  todos los pasos del horizonte — benchmark natural para series financieras.
+
+ESTRUCTURA DE SALIDA
+--------------------
+
+  results/
+  ├── all_metrics.csv                  Métricas de todos los tickers combinadas
+  │                                    (se regenera en cada ejecución)
+  ├── ticker_comparison_heatmap.png    Heatmap cross-ticker con métricas
+  │                                    scale-free (aparece con ≥ 2 tickers)
+  └── {TICKER}/                        Subdirectorio por ticker (ej: MXX, SPY)
+      ├── metrics_summary.csv          ticker, model, MAE, MAPE, RMSE, SMAPE,
+      │                                MASE, TheilU, DirAcc, n_predictions
+      ├── predictions.csv              ticker, origin_date, step, forecast_date,
+      │                                model, predicted, actual, last_obs
+      └── plots/
+          ├── comparison_metrics.png   Barras comparativas: MAE, MAPE, RMSE, SMAPE
+          ├── error_distribution.png   Violin + boxplot de error absoluto por modelo
+          ├── signed_error.png         Análisis de sesgo: distribución y media del
+          │                            error con signo (sobre/sub predicción)
+          └── predictions_sample_NN.png  Predicciones vs real por cada muestra
+
+EJEMPLOS
+--------
+
+  # Prueba rápida (3 muestras, 3 meses de test, sin Chronos)
+  python main.py --n-samples 3 --test-days 60 --models linreg arima lgbm --skip-chronos
+
+  # Otro ticker con rango de fechas específico
+  python main.py --ticker ^GSPC --start-date 2010-01-01 --cutoff-date 2023-01-01
+
+  # Solo modelos clásicos, más muestras
+  python main.py --models arima linreg prophet --n-samples 20 --cutoff-date 2021-01-01
+
+  # Comparar múltiples tickers (correr uno tras otro, heatmap se genera automáticamente)
+  python main.py --ticker ^MXX --cutoff-date 2022-01-01 --n-samples 12 --skip-chronos
+  python main.py --ticker SPY  --cutoff-date 2022-01-01 --n-samples 12 --skip-chronos
+  python main.py --ticker ^GSPC --cutoff-date 2022-01-01 --n-samples 12 --skip-chronos
+  # → genera results/ticker_comparison_heatmap.png y results/all_metrics.csv
+
+  # Corrida completa con Chronos (descarga ~600 MB la primera vez)
+  python main.py --cutoff-date 2022-01-01 --n-samples 12
