@@ -1,6 +1,6 @@
 # QuantLab Arena
 
-A modular Python framework for benchmarking classical, machine learning, and deep learning forecasting models on financial index time series. Evaluate 8 models side-by-side with a configurable train/test split, sequential sampling, and scale-free metrics that make results comparable across different indices.
+A modular Python framework for benchmarking classical, machine learning, and deep learning forecasting models on financial index time series. Evaluate 8 models side-by-side with a configurable train/test split, sequential sampling, and scale-free metrics that make results comparable across different financial instruments.
 
 ---
 
