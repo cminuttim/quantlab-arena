@@ -51,7 +51,7 @@ If you use QuantLab Arena in academic work, please cite both this benchmark and 
 - **Configurable evaluation**: cutoff date, test period length, forecast horizon, lag window
 - **Automatic data download and caching** via yfinance — smart cache reuse across runs
 - **Per-ticker output** organized in subdirectories; combined heatmap generated automatically when ≥ 2 tickers are available
-- **Rich visualizations**: metric bar charts, violin/box error distributions, signed-error bias analysis, per-sample forecast overlays
+- **Rich visualizations**: metric bar charts, violin/box error distributions, signed-error bias analysis, per-sample forecast overlays, error confidence interval forest plots (bootstrap or Gamma)
 
 ---
 
@@ -130,6 +130,7 @@ Models
 Output
   --output-dir      Base output directory (default: results/)
   --cache-dir       Data cache directory (default: cache/)
+  --ci-method       Method for error CI plot: bootstrap (default) or gamma
 ```
 
 ### Examples
@@ -166,6 +167,7 @@ results/
         ├── comparison_metrics.png   # Bar charts: MAE, MAPE, RMSE, SMAPE
         ├── error_distribution.png   # Violin + box of absolute error per model
         ├── signed_error.png         # Bias analysis: signed error distribution + mean bias
+        ├── error_ci.png             # Forest plot: error confidence intervals (bootstrap or Gamma)
         └── predictions_sample_NN.png  # Forecast overlay vs actual, one per sampled origin
 ```
 
@@ -196,23 +198,31 @@ results/
 
 ## Sample Results
 
-### ^MXX — Metric Comparison (cutoff 2019-01-01, horizon = 20 days)
+^FCHI (CAC 40) is shown as the example index because it exhibits the widest spread in model performance — from CNN1D (MASE 0.771, clearly beating the naive) to LightGBM (MASE 1.722, significantly worse than naive) — making it the most illustrative case for comparing model families.
 
-![Metric Comparison](docs/images/comparison_metrics_MXX.png)
+### ^FCHI — Metric Comparison (cutoff 2019-01-01, horizon = 20 days)
+
+![Metric Comparison](docs/images/comparison_metrics_FCHI.png)
 
 ### Forecast Sample — test period 2019–2022
 
-![Predictions Sample](docs/images/predictions_sample_MXX.png)
+![Predictions Sample](docs/images/predictions_sample_FCHI.png)
 
 ### Error Distribution by Model
 
-![Error Distribution](docs/images/error_distribution_MXX.png)
+![Error Distribution](docs/images/error_distribution_FCHI.png)
 
 ### Signed Error — Bias Analysis
 
 Models above zero systematically **over-predict**; models below zero systematically **under-predict**.
 
-![Signed Error](docs/images/signed_error_MXX.png)
+![Signed Error](docs/images/signed_error_FCHI.png)
+
+### Error Confidence Intervals
+
+Forest plot of per-model absolute error confidence intervals. By default uses bootstrap (CI for the median); optionally fitted with a Gamma distribution (prediction interval). Each bar spans the 95% CI; the dot marks the central estimate. The annotation shows distribution parameters and, for Gamma, the KS goodness-of-fit p-value.
+
+![Error CI](docs/images/error_ci_FCHI.png)
 
 ### Cross-Ticker Comparison (^MXX, ^GSPC, ^FTSE, ^FCHI, 000001.SS)
 
@@ -224,20 +234,38 @@ MASE and Theil's U are centered at 1.0 — green cells beat the random walk, red
 
 ## Benchmark Results
 
-Results for 5 indices, cutoff 2019-01-01, test 756 days (~3 years), horizon 20, samples 12, lags 10.
-Scale-free metrics only (MAPE % and MASE).
+Results for 5 indices, `--start-date 2005-01-01 --cutoff-date 2019-01-01 --n-samples 12 --lags 10 --horizon 20 --test-days 756`.
+Scale-free metrics only (MAPE % and MASE). All 8 models included.
 
 | Ticker | Index | Best model (MASE) | MASE | MAPE |
 |--------|-------|-------------------|------|------|
-| ^FTSE | FTSE 100 | GRU | 0.822 | 1.76% |
-| ^FCHI | CAC 40 | CNN1D | 0.804 | 2.37% |
-| ^GSPC | S&P 500 | GRU | 0.890 | 1.92% |
-| 000001.SS | Shanghai Comp. | LinearReg | 0.984 | 2.35% |
+| ^GSPC | S&P 500 | CNN1D | 0.807 | 1.74% |
+| ^FTSE | FTSE 100 | Chronos | 0.857 | 1.85% |
+| ^FCHI | CAC 40 | CNN1D | 0.771 | 2.30% |
 | ^MXX | IPC Mexico | LightGBM | 0.950 | 2.33% |
+| 000001.SS | Shanghai Comp. | LinearReg | 0.984 | 2.35% |
 
-> **Note on Prophet**: Prophet is designed for weekly/monthly series with clear seasonality. For 10-day financial forecasting it consistently underperforms time series models. This is expected behavior, not a bug.
+> **Note on Prophet**: Prophet is designed for weekly/monthly series with clear seasonality. For multi-week financial forecasting it consistently underperforms time series models. This is expected behavior, not a bug.
 
 > **Note on LightGBM / ^GSPC**: Tree-based models can occasionally produce extreme errors due to their lack of extrapolation outside the training distribution. Results should be interpreted with this in mind.
+
+> **Note on Chronos**: Being a zero-shot pretrained model, Chronos requires no training on the target series. Its competitive performance on ^FTSE illustrates that foundation models can be viable baselines even without fine-tuning.
+
+### Why do results vary so much across indices?
+
+Several factors can explain why the best model and the margin over the naive baseline differ substantially from one index to another:
+
+- **Market efficiency and liquidity.** Highly liquid, institutionally dominated markets (S&P 500, FTSE 100, CAC 40) tend to be more informationally efficient, leaving less systematic structure for any model to exploit. This partly explains why all models cluster closer to MASE = 1.0 on ^GSPC than on ^FCHI.
+
+- **Training data length and quality.** Deep learning models benefit more from long histories than classical ones. When the available history is shorter or noisier, simpler models (ARIMA, linear regression) degrade more gracefully and can outperform more complex architectures.
+
+- **Volatility regime during the test window.** The 2019–2022 test period includes the COVID-19 market crash — a structural break that no model trained on pre-2019 data was prepared for. Models that update their state incrementally (ARIMA) or were pretrained on diverse data (Chronos) tend to be more resilient to such breaks than models with fixed parameters (LightGBM, MLP).
+
+- **Emerging vs. developed markets.** Emerging market indices (^MXX, 000001.SS) can exhibit different autocorrelation structures, lower liquidity, and heavier intervention effects (circuit breakers, capital controls). These characteristics do not necessarily make forecasting easier — they simply shift which model family fits best. The dominance of linear regression on Shanghai Composite and LightGBM on IPC Mexico suggests that relatively simple, stable patterns exist in those series during the test period, but they are captured differently than in European indices.
+
+- **Model sensitivity to distribution shift.** Tree-based models (LightGBM) interpolate well within the training distribution but can extrapolate catastrophically to unseen price levels — as seen in ^GSPC during the 2020 crash. This effect is amplified in more volatile or structurally changing markets.
+
+These results reinforce the core motivation of QuantLab Arena: **no single model dominates across all conditions**, and empirical benchmarking on the specific index, period, and horizon of interest is the only reliable way to choose a forecasting approach.
 
 ---
 
