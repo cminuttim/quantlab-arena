@@ -98,6 +98,15 @@ def parse_args() -> argparse.Namespace:
             "Runs all models if not specified."
         ),
     )
+    parser.add_argument(
+        "--ci-method",
+        default="bootstrap",
+        choices=["bootstrap", "gamma"],
+        help=(
+            "Method for error_ci.png: 'bootstrap' (CI for the median, default) or "
+            "'gamma' (parametric prediction interval from a fitted Gamma distribution)."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -197,7 +206,8 @@ def main():
 
     # 6. Generate plots
     from visualize import (plot_metrics_comparison, plot_predictions_sample,
-                           plot_error_distribution, plot_signed_error)
+                           plot_error_distribution, plot_signed_error,
+                           plot_error_ci)
 
     plot_params = {
         "ticker":      args.ticker,
@@ -224,6 +234,13 @@ def main():
         os.path.join(plots_dir, "signed_error.png"),
         ticker=args.ticker,
         params=plot_params,
+    )
+    plot_error_ci(
+        preds_df,
+        os.path.join(plots_dir, "error_ci.png"),
+        ticker=args.ticker,
+        params=plot_params,
+        method=args.ci_method,
     )
 
     _, test_df = split_train_test(df, args.cutoff_date, args.test_days)

@@ -295,6 +295,127 @@ def plot_signed_error(
     print(f"Saved signed error chart → {output_path}")
 
 
+def plot_error_ci(
+    preds_df: pd.DataFrame,
+    output_path: str,
+    ticker: str = "",
+    params: dict | None = None,
+    ci: float = 0.95,
+    method: str = "bootstrap",
+    n_bootstrap: int = 10000,
+) -> None:
+    """
+    Forest plot of per-model absolute error confidence intervals.
+
+    method="bootstrap" (default):
+        Percentile bootstrap CI for the median absolute error.
+        Resamples errors n_bootstrap times; the dot shows the sample median.
+        Interpretation: uncertainty about the typical (median) error level.
+
+    method="gamma":
+        Parametric prediction interval from a fitted Gamma distribution (loc=0).
+        The dot shows the distribution mean.
+        Interpretation: range within which individual errors are expected to fall.
+
+    Models ordered by median absolute error (best at top).
+    """
+    from scipy import stats as st
+
+    preds_df = preds_df.copy()
+    preds_df["abs_error"] = (preds_df["predicted"] - preds_df["actual"]).abs()
+
+    order = (
+        preds_df.groupby("model")["abs_error"]
+        .median()
+        .sort_values()
+        .index.tolist()
+    )
+    colors = _model_colors(order)
+
+    alpha = 1 - ci
+    rows = []
+    for model in order:
+        errors = preds_df[preds_df["model"] == model]["abs_error"].dropna().values
+
+        if method == "bootstrap":
+            rng = np.random.default_rng(1)
+            boot_medians = np.array([
+                np.median(rng.choice(errors, size=len(errors), replace=True))
+                for _ in range(n_bootstrap)
+            ])
+            ci_low  = float(np.percentile(boot_medians, alpha / 2 * 100))
+            ci_high = float(np.percentile(boot_medians, (1 - alpha / 2) * 100))
+            center  = float(np.median(errors))
+            note    = f"bootstrap n={n_bootstrap:,}  |  median={center:.1f}"
+        else:  # gamma
+            try:
+                shape, loc, scale = st.gamma.fit(errors, floc=0)
+                dist   = st.gamma(shape, loc=loc, scale=scale)
+                ci_low  = dist.ppf(alpha / 2)
+                ci_high = dist.ppf(1 - alpha / 2)
+                center  = dist.mean()
+                _, ks_p = st.kstest(errors, "gamma", args=(shape, loc, scale))
+                fit_tag = "good fit" if ks_p >= 0.05 else "poor fit"
+                note = (
+                    f"Γ(shape={shape:.2f}, scale={scale:.2f})  |  "
+                    f"KS p={ks_p:.3f} ({fit_tag})"
+                )
+            except Exception:
+                ci_low  = float(np.percentile(errors, alpha / 2 * 100))
+                ci_high = float(np.percentile(errors, (1 - alpha / 2) * 100))
+                center  = float(np.mean(errors))
+                note    = "empirical percentiles (Gamma fit failed)"
+
+        rows.append(dict(model=model, center=center, ci_low=ci_low,
+                         ci_high=ci_high, note=note))
+
+    method_label = (
+        f"Bootstrap CI for median  ({n_bootstrap:,} resamples)"
+        if method == "bootstrap"
+        else "Gamma prediction interval"
+    )
+    n = len(order)
+    fig, ax = plt.subplots(figsize=(12, max(5, n * 1.1 + 2)))
+    title = f"Absolute Error — {int(ci * 100)}% Confidence Intervals ({method_label})"
+    if ticker:
+        title += f"  —  {ticker}"
+    ax.set_title(title, fontsize=12, fontweight="bold")
+
+    for i, row in enumerate(rows):
+        color = colors[row["model"]]
+        # Horizontal CI bar
+        ax.plot([row["ci_low"], row["ci_high"]], [i, i],
+                color=color, linewidth=2.5, solid_capstyle="round", zorder=3)
+        # End caps
+        for xv in (row["ci_low"], row["ci_high"]):
+            ax.plot([xv, xv], [i - 0.18, i + 0.18], color=color, linewidth=2, zorder=3)
+        # Center dot
+        ax.scatter([row["center"]], [i], color=color, s=70, zorder=5)
+        # Method info below the bar
+        ax.text(row["ci_low"], i - 0.28, row["note"],
+                va="top", ha="left", fontsize=7, color="#555555", style="italic")
+
+    ax.set_yticks(range(n))
+    ax.set_yticklabels(order, fontsize=9)
+    ax.set_xlabel("Absolute Error")
+    ax.set_ylabel("Model  (ordered by median error)")
+    ax.grid(axis="x", alpha=0.3)
+    ax.set_ylim(-0.9, n - 0.3)
+
+    center_label = "Sample median" if method == "bootstrap" else "Distribution mean"
+    ci_label     = f"{int(ci * 100)}% CI for median" if method == "bootstrap" else f"{int(ci * 100)}% prediction interval"
+    ax.scatter([], [], color="gray", s=70, label=center_label)
+    ax.plot([], [], color="gray", linewidth=2.5, label=ci_label)
+    ax.legend(loc="lower right", fontsize=8)
+
+    plt.tight_layout(rect=[0, 0.03, 1, 1])
+    if params:
+        _add_param_footer(fig, params)
+    plt.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"Saved CI plot → {output_path}")
+
+
 def plot_ticker_comparison(
     all_metrics_df: pd.DataFrame,
     output_path: str,

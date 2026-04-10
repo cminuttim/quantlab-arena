@@ -122,7 +122,7 @@ class LGBMModel(BaseModel):
             n_estimators=200,
             num_leaves=31,
             learning_rate=0.05,
-            random_state=42,
+            random_state=1,
             verbose=-1,
         )
         self._model.fit(X.values, y.values)
@@ -152,7 +152,7 @@ class MLPModel(BaseModel):
             max_iter=500,
             early_stopping=True,
             validation_fraction=0.1,
-            random_state=42,
+            random_state=1,
         )
         self._model.fit(X_scaled, y_scaled)
 
@@ -189,7 +189,7 @@ class CNN1DModel(BaseModel):
         from torch.utils.data import DataLoader, TensorDataset
         from features import build_sequence_dataset
 
-        torch.manual_seed(42)
+        torch.manual_seed(1)
         self._device = torch.device("cpu")
 
         values = train_series.values.astype(np.float32)
@@ -276,7 +276,7 @@ class GRUModel(BaseModel):
         from torch.utils.data import DataLoader, TensorDataset
         from features import build_sequence_dataset
 
-        torch.manual_seed(42)
+        torch.manual_seed(1)
         self._device = torch.device("cpu")
 
         values = train_series.values.astype(np.float32)
