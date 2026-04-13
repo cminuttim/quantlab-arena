@@ -241,7 +241,7 @@ Scale-free metrics only (MAPE % and MASE). All 8 models included.
 | Ticker | Index | Best model (MASE) | MASE | MAPE |
 |--------|-------|-------------------|------|------|
 | ^GSPC | S&P 500 | CNN1D | 0.807 | 1.74% |
-| ^FTSE | FTSE 100 | Chronos | 0.857 | 1.85% |
+| ^FTSE | FTSE 100 | GRU | 0.884 | 1.89% |
 | ^FCHI | CAC 40 | CNN1D | 0.771 | 2.30% |
 | ^MXX | IPC Mexico | LightGBM | 0.950 | 2.33% |
 | 000001.SS | Shanghai Comp. | LinearReg | 0.984 | 2.35% |
@@ -250,7 +250,7 @@ Scale-free metrics only (MAPE % and MASE). All 8 models included.
 
 > **Note on LightGBM / ^GSPC**: Tree-based models can occasionally produce extreme errors due to their lack of extrapolation outside the training distribution. Results should be interpreted with this in mind.
 
-> **Note on Chronos**: Being a zero-shot pretrained model, Chronos requires no training on the target series. Its competitive performance on ^FTSE illustrates that foundation models can be viable baselines even without fine-tuning.
+> **Note on Chronos**: Being a zero-shot pretrained model, Chronos requires no training on the target series. Despite not winning any index in this particular benchmark run, it ranks in the top half on most indices and represents a strong zero-shot baseline worth including for comparison.
 
 ### Why do results vary so much across indices?
 
