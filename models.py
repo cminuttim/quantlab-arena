@@ -333,6 +333,75 @@ except ImportError:
 
 
 # ---------------------------------------------------------------------------
+# LSTM (PyTorch)
+# ---------------------------------------------------------------------------
+
+class LSTMModel(BaseModel):
+    name = "LSTM"
+
+    def fit(self, train_series: pd.Series) -> None:
+        import torch
+        import torch.nn as nn
+        from torch.utils.data import DataLoader, TensorDataset
+        from features import build_sequence_dataset
+
+        torch.manual_seed(1)
+        self._device = torch.device("cpu")
+
+        values = train_series.values.astype(np.float32)
+        X, y = build_sequence_dataset(values, self.n_lags)
+
+        means = X.mean(axis=1, keepdims=True)
+        stds = X.std(axis=1, keepdims=True) + 1e-8
+        X_norm = (X - means) / stds
+        y_norm = (y - means[:, 0, 0]) / stds[:, 0, 0]
+
+        X_t = torch.tensor(X_norm)
+        y_t = torch.tensor(y_norm)
+
+        dataset = TensorDataset(X_t, y_t)
+        loader = DataLoader(dataset, batch_size=32, shuffle=True)
+
+        self._net = _LSTMNet().to(self._device)
+        optimizer = torch.optim.Adam(self._net.parameters(), lr=1e-3)
+        loss_fn = nn.MSELoss()
+
+        self._net.train()
+        for epoch in range(50):
+            for xb, yb in loader:
+                xb, yb = xb.to(self._device), yb.to(self._device)
+                optimizer.zero_grad()
+                pred = self._net(xb).squeeze(-1)
+                loss = loss_fn(pred, yb)
+                loss.backward()
+                optimizer.step()
+
+    def predict(self, context: pd.Series, horizon: int) -> np.ndarray:
+        return recursive_predict_torch(
+            self._net, context, horizon, self.n_lags, self._device
+        )
+
+
+try:
+    import torch.nn as nn
+
+    class _LSTMNet(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.lstm = nn.LSTM(input_size=1, hidden_size=64, num_layers=2,
+                                batch_first=True, dropout=0.1)
+            self.head = nn.Linear(64, 1)
+
+        def forward(self, x):
+            # x: (batch, seq_len, 1)
+            out, _ = self.lstm(x)
+            return self.head(out[:, -1, :])  # last timestep
+
+except ImportError:
+    pass
+
+
+# ---------------------------------------------------------------------------
 # Prophet
 # ---------------------------------------------------------------------------
 
@@ -433,6 +502,7 @@ def get_all_models(horizon: int = 10, n_lags: int = 20, skip_chronos: bool = Fal
         MLPModel(horizon=horizon, n_lags=n_lags),
         CNN1DModel(horizon=horizon, n_lags=n_lags),
         GRUModel(horizon=horizon, n_lags=n_lags),
+        LSTMModel(horizon=horizon, n_lags=n_lags),
         ProphetModel(horizon=horizon, n_lags=n_lags),
     ]
     if not skip_chronos:

@@ -94,7 +94,7 @@ def parse_args() -> argparse.Namespace:
         nargs="+",
         default=None,
         help=(
-            "Subset of models to run. Options: arima linreg lgbm mlp cnn gru prophet chronos. "
+            "Subset of models to run. Options: arima linreg lgbm mlp cnn gru lstm prophet chronos. "
             "Runs all models if not specified."
         ),
     )
@@ -146,7 +146,7 @@ def main():
 
     # 2. Build models
     from models import get_all_models, ArimaModel, LinRegModel, LGBMModel, MLPModel
-    from models import CNN1DModel, GRUModel, ProphetModel, ChronosModel
+    from models import CNN1DModel, GRUModel, LSTMModel, ProphetModel, ChronosModel
 
     _MODEL_MAP = {
         "arima": ArimaModel,
@@ -155,6 +155,7 @@ def main():
         "mlp": MLPModel,
         "cnn": CNN1DModel,
         "gru": GRUModel,
+        "lstm": LSTMModel,
         "prophet": ProphetModel,
         "chronos": ChronosModel,
     }

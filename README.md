@@ -65,6 +65,7 @@ If you use QuantLab Arena in academic work, please cite both this benchmark and 
 | `mlp` | Multilayer Perceptron | Neural Network | scikit-learn |
 | `cnn` | 1D Convolutional Network | Deep Learning | PyTorch |
 | `gru` | Gated Recurrent Unit | Deep Learning | PyTorch |
+| `lstm` | Long Short-Term Memory | Deep Learning | PyTorch |
 | `prophet` | Trend + Seasonality decomposition | Statistical | Prophet |
 | `chronos` | Pretrained zero-shot forecaster | Foundation Model | Amazon Chronos T5 |
 
@@ -124,7 +125,7 @@ Evaluation
   --lags            Lag window size for ML/DL models (default: 20)
 
 Models
-  --models          Space-separated subset: arima linreg lgbm mlp cnn gru prophet chronos
+  --models          Space-separated subset: arima linreg lgbm mlp cnn gru lstm prophet chronos
   --skip-chronos    Exclude Chronos (avoids the 600 MB download / slow CPU inference)
 
 Output
