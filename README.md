@@ -236,7 +236,7 @@ MASE and Theil's U are centered at 1.0 — green cells beat the random walk, red
 ## Benchmark Results
 
 Results for 5 indices, `--start-date 2005-01-01 --cutoff-date 2019-01-01 --n-samples 12 --lags 10 --horizon 20 --test-days 756`.
-Scale-free metrics only (MAPE % and MASE). All 8 models included.
+Scale-free metrics only (MAPE % and MASE). All 9 models included.
 
 | Ticker | Index | Best model (MASE) | MASE | MAPE |
 |--------|-------|-------------------|------|------|
